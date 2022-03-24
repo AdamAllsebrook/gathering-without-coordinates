@@ -35,9 +35,10 @@ class GetMiRoPosService:
     # get relative miro positions
     def callback_get_miro_pos(self, req):
         relative_positions = []
+        res = GetMiRoPosResponse()
         # get position of requesting miro
         if req.name not in self.model_states:
-            return
+            return res
         req_pos = self.model_states[req.name]
 
         # get relative positions of other miros within range
