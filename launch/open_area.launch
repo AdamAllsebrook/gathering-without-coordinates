@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- Add custom Gazebo paths -->
+    <env name="GAZEBO_MODEL_PATH"
+        value="$(find gathering_without_coordinates)/models:$(optenv MIRO_DIR_MDK)/sim/models:$(optenv GAZEBO_MODEL_PATH)" />
+    <env name="GAZEBO_RESOURCE_PATH"
+        value="$(optenv MIRO_DIR_MDK)/sim:$(optenv GAZEBO_RESOURCE_PATH)" />
+    <env name="GAZEBO_PLUGIN_PATH"
+        value="$(optenv MIRO_DIR_MDK)/bin/${MIRO_SYSTEM}:$(optenv GAZEBO_PLUGIN_PATH)" />
+
+    <!-- Specify which .world file to load -->
+    <arg name="world" default="$(find gathering_without_coordinates)/sim/worlds/open.world"/>
+
+    <!-- Set the name for Gazebo -->
+    <arg name="gazebo_ns" default="gazebo" doc="Gazebo namespace, typically 'gazebo' or 'gazebo_server'" />
+    <!-- start Gazebo server with exposed ROS interface-->
+    <node name="$(arg gazebo_ns)"
+        pkg="gazebo_ros"
+        type="gzserver"
+        respawn="false"
+        required="true"
+        args="--physics ode --verbose $(arg world)"
+    />
+
+    <!-- <node name="get_miro_pos" pkg="gathering_without_coordinates" type="get_miro_pos.py" output="screen"></node> -->
+    
+
+    <group ns="miro1">
+        <node name="spawn_miro" pkg="gazebo_ros" type="spawn_model" ns="miro1"
+            args="-sdf -model miro1
+            -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf
+            -gazebo_namespace /$(arg gazebo_ns) 
+            -x 0
+            -y 0
+            -z 0 
+            -Y 3.14" />
+        <!-- <node name="agent" pkg="gathering_without_coordinates" type="agent.py" output="screen"></node> -->
+    </group>
+
+    <!-- <group ns="miro2">
+        <node name="spawn_miro" pkg="gazebo_ros" type="spawn_model" ns="miro2"
+            args="-sdf -model miro2
+            -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf 
+            -gazebo_namespace /$(arg gazebo_ns) 
+            -x -1
+            -y 0
+            -z 0 
+            -Y 0" />
+    </group> -->
+
+  <!-- Start Gazebo client -->
+  <node name="gazebo_gui"
+      pkg="gazebo_ros"
+      type="gzclient"
+      respawn="true"
+  />
+
+</launch>

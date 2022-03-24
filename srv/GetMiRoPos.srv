@@ -1,0 +1,4 @@
+string name
+float32 range
+---
+geometry_msgs/Vector3[] relative_positions
