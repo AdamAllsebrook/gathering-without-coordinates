@@ -5,6 +5,7 @@ import numpy as np
 
 from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Vector3
+from tf.transformations import euler_from_quaternion
 
 from gathering_without_coordinates.srv import GetMiRoPos, GetMiRoPosResponse
 
@@ -47,7 +48,7 @@ class GetMiRoPosService:
                 relative_positions.append(Vector3(
                     position.x - req_pos.x,
                     position.y - req_pos.y,
-                    0
+                    position.z
                 ))
 
         res = GetMiRoPosResponse()
@@ -59,10 +60,12 @@ class GetMiRoPosService:
         self.model_states = {}
         for i, model_name in enumerate(msg.name):
             if 'miro' in model_name:
+                q = msg.pose[i].orientation
+                euler = euler_from_quaternion([q.x, q.y, q.z, q.w])
                 self.model_states[model_name] = Vector3(
                     msg.pose[i].position.x,
                     msg.pose[i].position.y,
-                    0
+                    euler[2]
                 )
 
 

@@ -16,7 +16,7 @@ def size(vec):
 
 class Agent:
     TICK = 10
-    RANGE = np.Infinity
+    RANGE = 2
 
     def __init__(self):
         rospy.init_node('agent')
@@ -43,6 +43,7 @@ class Agent:
 
         self.state = 'turn'
         self.timer = 0
+        self.move_time = 0
 
     def callback_miro_pose(self, msg):
         self.pose = msg
@@ -72,13 +73,32 @@ class Agent:
         # Publish message to control/cmd_vel topic
         self.pub_vel.publish(msg_cmd_vel)
 
+    def turn_to_angle(self, theta):
+        while not rospy.is_shutdown():
+
+            diff = (theta - self.pose.theta) % (2 * np.pi)
+            if (np.pi - 0.1 < diff < np.pi + 0.1) or -0.1 < diff < 0.1:
+                return
+
+            elif diff > np.pi:
+                self.drive(2, -0)
+            else:
+                self.drive(-0, 2)
+
+            self.rate.sleep()
+
     def loop(self):
         while not rospy.is_shutdown():
-            print(self.state)
+            relative_positions = self.get_relative_positions()
+
+            for pos in relative_positions:
+                # print(size(np.array([pos.x, pos.y]) - np.array([self.pose.x, self.pose.y]))
+                if size(np.array([pos.x, pos.y]) - np.array([self.pose.x, self.pose.y])) < 1:
+                    self.state = 'fleet'
+                    break
+
             if self.state == 'turn':
-                
-                relative_positions = self.get_relative_positions()
-                if len(relative_positions) > 0:
+                if len(relative_positions) > 0:                    
                     sum_all = Vector3()
                     for pos in relative_positions:
                         sum_all.x += pos.x
@@ -88,28 +108,47 @@ class Agent:
                         sum_all.y / len(relative_positions),
                         0
                     )
-                    # pose = np.array([np.cos(self.pose.theta), np.sin(self.pose.theta)])
-
-                    # print(self.pose.theta)
-
                     theta = (np.arctan2(centre.y, centre.x) - self.pose.theta) % (2 * np.pi)
                     
-
-                    # print(np.pi - 0.5, theta, np.pi + 0.5)
                     if (np.pi - 0.1 < theta < np.pi + 0.1) or -0.1 < theta < 0.1:
                         self.state = 'move'
                         self.timer = time.time()
+                        self.move_time = 5
   
                     elif theta > np.pi:
                         self.drive(2, -0)
                     else:
                         self.drive(-0, 2)
 
+                else:
+                    # explore
+                    theta = np.random.random() * 2 * np.pi
+                    self.turn_to_angle(theta)
+                    self.state = 'move'
+                    self.timer = time.time()
+                    self.move_time = 5
 
             elif self.state == 'move':
                 self.drive(3, 3)
-                if time.time() - self.timer > 5:
+                if time.time() - self.timer > self.move_time:
                     self.state = 'turn'
+
+            elif self.state == 'fleet':
+                print(self.name, 'im fleeting :)')
+                pose = 0
+                n = 0
+                for pos in relative_positions:
+                    if size(np.array([pos.x, pos.y]) - np.array([self.pose.x, self.pose.y])) < 1:
+                        pose += pos.z
+                        n += 1
+                pose = pose / n
+
+                self.turn_to_angle(pose)
+                self.state = 'move'
+                self.timer = time.time()
+                self.move_time = 5
+
+
 
             # diff = np.arccos(np.dot(centre, pose) / np.abs(size(centre) * size(pose)))
 
