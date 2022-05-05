@@ -3,7 +3,7 @@
 import rospy
 import numpy as np
 
-from gazebo_msgs.msg import ModelStates
+from gazebo_msgs.msg import ModelStates, LinkStates
 from geometry_msgs.msg import Vector3
 from tf.transformations import euler_from_quaternion
 
@@ -30,6 +30,12 @@ class GetMiRoPosService:
             'gazebo/model_states',
             ModelStates,
             self.callback_model_states
+        )
+
+        self.sub_link_states = rospy.Subscriber(
+            'gazebo/link_states',
+            LinkStates,
+            self.callback_link_states
         )
         self.model_states = {}
 
@@ -67,6 +73,13 @@ class GetMiRoPosService:
                     msg.pose[i].position.y,
                     euler[2]
                 )
+                
+    # 1.05
+    # get the current position of all miros
+    def callback_link_states(self, msg):
+        for i, link_name in enumerate(msg.name):
+            if 'inside_walls' in link_name:
+                print(link_name, msg.pose[i])
 
 
 if __name__ == '__main__':

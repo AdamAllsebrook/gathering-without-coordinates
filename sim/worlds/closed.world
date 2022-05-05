@@ -64,7 +64,7 @@
 			<direction>-0.5 0.5 -1</direction>
 		</light>
 
-		<include>
+		<!-- <include>
 			<name>miro01</name>
 			<uri>model://miro_model</uri>
 			<pose>0 0 0 0 0 0</pose>
@@ -80,14 +80,14 @@
 			<name>miro03</name>
 			<uri>model://miro_model</uri>
 			<pose>0.5 0.2 0.05 0 0 0.5</pose>
-		</include>
+		</include> -->
 
 
 		<include>
 			<uri>model://ground_plane</uri>
 		</include>
 
-		<include>
+		<!-- <include>
 			<name>wall1</name>
 			<uri>model://grey_wall</uri>
 			<pose>0 3.75 0 0 0 0</pose>
@@ -111,6 +111,19 @@
 			<name>wall4</name>
 			<uri>model://grey_wall</uri>
 			<pose>-3.75 0 0 0 0 1.57</pose>
+		</include> -->
+
+		
+
+		<include>
+			<name>wall1</name>
+			<uri>model://arena_walls</uri>
+			<pose>0 0 0 0 0 0</pose>
+		</include>
+		<include>
+			<name>inside_walls</name>
+			<uri>model://navigation</uri>
+			<pose>0 0 0 0 0 0</pose>
 		</include>
 
 		<gravity>0 0 -9.8</gravity>

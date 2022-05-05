@@ -26,19 +26,19 @@
     <node name="get_miro_pos" pkg="gathering_without_coordinates" type="get_miro_pos.py" output="screen"></node>
     
 
-    <!-- <group ns="miro1">
+    <group ns="miro1">
         <node name="spawn_miro" pkg="gazebo_ros" type="spawn_model" ns="miro1"
             args="-sdf -model miro1
             -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf
             -gazebo_namespace /$(arg gazebo_ns) 
-            -x 0
+            -x 1
             -y 0
             -z 0 
             -Y 3.14" />
         <node name="agent" pkg="gathering_without_coordinates" type="agent.py" output="screen"></node>
-    </group> -->
+    </group>
 
-    <!-- <group ns="miro2">
+    <group ns="miro2">
         <node name="spawn_miro" pkg="gazebo_ros" type="spawn_model" ns="miro2"
             args="-sdf -model miro2
             -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf 
@@ -60,7 +60,7 @@
             -z 0 
             -Y 0" />
         <node name="agent" pkg="gathering_without_coordinates" type="agent.py" output="screen"></node>
-    </group> -->
+    </group>
 
   <!-- Start Gazebo client -->
   <node name="gazebo_gui"

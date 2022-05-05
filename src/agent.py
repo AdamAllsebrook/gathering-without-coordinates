@@ -5,6 +5,7 @@ import numpy as np
 import time
 
 from geometry_msgs.msg import TwistStamped, Vector3, Pose2D
+from sensor_msgs.msg import Range
 from miro2.lib import wheel_speed2cmd_vel
 
 from gathering_without_coordinates.srv import GetMiRoPos
@@ -38,15 +39,26 @@ class Agent:
             self.callback_miro_pose
         )
 
+        self.sub_sonar = rospy.Subscriber(
+            self.name + 'sensors/sonar',
+            Range,
+            self.callback_miro_sonar
+        )
+
         self.rate = rospy.Rate(self.TICK)
         self.pose = Pose2D()
+        self.sonar = 1
+        self.n_reverse = 0
 
         self.state = self.gather
 
-        rospy.sleep(5)
+        rospy.sleep(2)
 
     def callback_miro_pose(self, msg):
         self.pose = msg
+
+    def callback_miro_sonar(self, msg):
+        self.sonar = msg.range
 
     # returns a Vector3 list of each miros relative position
     def get_relative_positions(self):
@@ -75,6 +87,7 @@ class Agent:
 
     def turn_to_angle(self, theta):
         while not rospy.is_shutdown():
+            # print(self.name, ' is turning')
 
             diff = (theta - self.pose.theta) % (2 * np.pi)
             if (np.pi - 0.1 < diff < np.pi + 0.1) or -0.1 < diff < 0.1:
@@ -87,13 +100,14 @@ class Agent:
 
             self.rate.sleep()
 
-    def move_for_time(self, t):
-        start_time = time.time()
+    def move_for_time(self, t, speed=1):
+        end_time = time.time() + t
         while not rospy.is_shutdown():
+            # print(self.name, ' is moving')
 
-            self.drive(1, 1)
+            self.drive(speed, speed)
 
-            if start_time + t < time.time():
+            if time.time() > end_time:
                 return
             self.rate.sleep()
         
@@ -110,6 +124,7 @@ class Agent:
 
     def fleet(self):
         print(self.name + ' is FLEETING')
+        self.n_reverse = 0
         # diff = np.inf
         # while diff > 0.2:
         relative_positions = self.get_relative_positions()
@@ -153,30 +168,41 @@ class Agent:
 
         self.turn_to_angle(align)
         # diff = np.abs(pose - self.pose.theta)
-        self.move_for_time(5)
+        self.move_for_time(5, speed=5)
 
     def gather(self):
         print(self.name + ' is GATHERING')
+        self.n_reverse = 0
         relative_positions = self.get_relative_positions()
         if len(relative_positions) > 0:           
             centre = self.get_average_position(relative_positions)
             theta = (np.arctan2(centre.y, centre.x)) % (2 * np.pi)
 
             self.turn_to_angle(theta)
-            self.move_for_time(5)
+            self.move_for_time(5, speed=5)
 
     def explore(self):
         print(self.name + ' is EXPLORING')
+        self.n_reverse = 0
         theta = np.random.random() * 2 * np.pi
         self.turn_to_angle(theta)
-        self.move_for_time(5)
+        self.move_for_time(5, speed=5)
+
+    def reverse(self):
+        print(self.name + ' is REVERSING')
+        self.n_reverse += 1
+        self.move_for_time(2, -1)
+        self.turn_to_angle(self.pose.theta + np.radians(30))
+        self.move_for_time(5, speed=5)
 
     def loop(self):
         while not rospy.is_shutdown():
             relative_positions = self.get_relative_positions()
 
             self.state = self.gather
-            if len(relative_positions) == 0:
+            if self.sonar < 0.1:
+                self.state = self.reverse
+            elif len(relative_positions) == 0:
                 self.state = self.explore
             else:
                 for pos in relative_positions:
