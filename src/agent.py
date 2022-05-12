@@ -18,6 +18,7 @@ def size(vec):
 class Agent:
     TICK = 10
     RANGE = 5
+    N_MIROS = 3
 
     def __init__(self):
         rospy.init_node('agent')
@@ -63,6 +64,7 @@ class Agent:
     # returns a Vector3 list of each miros relative position
     def get_relative_positions(self):
         res = self.get_miro_pos(self.name.replace('/', ''), self.RANGE)
+        print(self.name, ' can see %d other miros' % len(res.relative_positions))
         return res.relative_positions
 
     def drive(self, speed_l=0.1, speed_r=0.1):  # (m/sec, m/sec)
@@ -123,8 +125,8 @@ class Agent:
             )
 
     def fleet(self):
-        print(self.name + ' is FLEETING')
         self.n_reverse = 0
+        
         # diff = np.inf
         # while diff > 0.2:
         relative_positions = self.get_relative_positions()
@@ -137,6 +139,12 @@ class Agent:
                 align += pos.z
                 n += 1
         align = align / (n+1)
+
+        if n > self.N_MIROS / 2:
+            print(self.name + ' has STOPPED')
+            return
+        else:
+            print(self.name + ' is FLEETING')
 
         # # cohesion
         # rel_pos = []
