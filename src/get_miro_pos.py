@@ -2,12 +2,18 @@
 
 import rospy
 import numpy as np
+from joblib import dump, load
+import os
 
 from gazebo_msgs.msg import ModelStates, LinkStates
 from geometry_msgs.msg import Vector3
 from tf.transformations import euler_from_quaternion
 
 from gathering_without_coordinates.srv import GetMiRoPos, GetMiRoPosResponse
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+RESULTS_PATH = dir_path + '/results.gz'
 
 
 # get the 2D distance between two Vector3
@@ -52,6 +58,14 @@ class GetMiRoPosService:
             (-1.312770, -1.841330, 0, 1)
         ]
         self.wall_length = 1.05
+
+        if os.path.exists(RESULTS_PATH):
+            self.data = load(RESULTS_PATH)
+        else:
+            self.data = []
+        self.data.append(np.empty((0, 2)))
+
+        self.start = rospy.get_rostime()
 
     def vision_blocked(self, x, y, dx, dy):
         """
@@ -140,6 +154,29 @@ class GetMiRoPosService:
                     msg.pose[i].position.y,
                     euler[2]
                 )
+        self.save_average_distance()
+
+    def save_average_distance(self):
+        if self.data[-1].shape[0] == 0 or self.data[-1][-1][0] + 0.1 < rospy.get_rostime().to_sec():
+            total = 0
+            n = 0
+            for name in self.model_states:
+                for other_name in self.model_states:
+                    if name != other_name:
+                        total += np.sqrt((self.model_states[name].x - self.model_states[other_name].x) ** 2 + (self.model_states[name].y - self.model_states[other_name].y) ** 2)
+                        n += 1
+
+            if n > 0:
+                dist = total / n
+                time = rospy.get_rostime() - self.start
+                time = time.to_sec()
+
+                self.data[-1] = np.append(self.data[-1], np.array([[time, dist]]), axis=0)
+                # print(time, dist)
+
+        # all_pos = np.array([self.model_states[name] for name in self.model_states])
+
+        # average = 
                 
     # 1.05
     # get the current position of all miros
@@ -149,6 +186,10 @@ class GetMiRoPosService:
     #             print(link_name, msg.pose[i])
 
 
+    def save(self):
+        dump(self.data, dir_path + '/results.gz')
+
 if __name__ == '__main__':
     main = GetMiRoPosService()
+    rospy.on_shutdown(main.save)
     rospy.spin()

@@ -1,0 +1,71 @@
+
+<launch>
+    <!-- Set the name for Gazebo -->
+    <arg name="gazebo_ns" default="gazebo" doc="Gazebo namespace, typically 'gazebo' or 'gazebo_server'" />
+    <node name="get_miro_pos" pkg="gathering_without_coordinates" type="get_miro_pos.py" output="screen"></node>
+    <group ns="miro1">
+        <!-- <param name="~pos" command="$(find gathering_without_coordinates)/src/generate_random_position.py" default="-x 0 -y 0"/> -->
+        <node name="spawn_miro" pkg="gazebo_ros" type="spawn_model" ns="miro1"
+            args="-sdf -model miro1
+            -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf
+            -gazebo_namespace /$(arg gazebo_ns) 
+            -x 0
+            -y 0
+            -z 0 
+            -Y 3.14" />
+        <node name="agent" pkg="gathering_without_coordinates" type="agent.py" output="screen"></node>
+    </group>
+
+    <group ns="miro2">
+        <!-- <param name="pos" command="$(find gathering_without_coordinates)/src/generate_random_position.py" default="-x 0 -y 0"/> -->
+        <node name="spawn_miro" pkg="gazebo_ros" type="spawn_model" ns="miro2"
+            args="-sdf -model miro2
+            -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf 
+            -gazebo_namespace /$(arg gazebo_ns) 
+            -x -1
+            -y 0
+            -z 0 
+            -Y 0" />
+        <node name="agent" pkg="gathering_without_coordinates" type="agent.py" output="screen"></node>
+    </group>
+
+    <group ns="miro3">
+        <!-- <param name="pos" command="$(find gathering_without_coordinates)/src/generate_random_position.py" default="-x 0 -y 0"/> -->
+        <node name="spawn_miro" pkg="gazebo_ros" type="spawn_model" ns="miro3"
+            args="-sdf -model miro3
+            -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf 
+            -gazebo_namespace /$(arg gazebo_ns) 
+            -x -1
+            -y 2
+            -z 0 
+            -Y 0" />
+        <node name="agent" pkg="gathering_without_coordinates" type="agent.py" output="screen"></node>
+    </group>
+    
+
+    <!-- <group ns="miro4">
+        <node name="spawn_miro" pkg="gazebo_ros" type="spawn_model" ns="miro4"
+            args="-sdf -model miro4
+            -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf 
+            -gazebo_namespace /$(arg gazebo_ns) 
+            -x -1
+            -y 2
+            -z 0 
+            -Y 0" />
+        <node name="agent" pkg="gathering_without_coordinates" type="agent.py" output="screen"></node>
+    </group>
+    
+
+    <group ns="miro5">
+        <node name="spawn_miro" pkg="gazebo_ros" type="spawn_model" ns="miro5"
+            args="-sdf -model miro5
+            -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf 
+            -gazebo_namespace /$(arg gazebo_ns) 
+            -x -1
+            -y 2
+            -z 0 
+            -Y 0" />
+        <node name="agent" pkg="gathering_without_coordinates" type="agent.py" output="screen"></node>
+    </group> -->
+    <node name="randomise_positions" pkg="gathering_without_coordinates" type="randomise_positions.py" output="screen"></node>
+</launch>
