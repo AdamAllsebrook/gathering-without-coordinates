@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# not used in the final implementation of tests
+
 import numpy as np
 import rospy
 import tf

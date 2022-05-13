@@ -12,13 +12,17 @@ from sensor_msgs.msg import JointState
 from gathering_without_coordinates.srv import GetMiRoPos
 
 
+# return the magnitude of a vector
 def size(vec):
     return np.sqrt(vec[0] ** 2 + vec[1] ** 2)
 
 
 class Agent:
+    # ticks per second
     TICK = 10
+    # vision range in metres
     RANGE = 5
+    # number of miros in the world
     N_MIROS = 3
 
     def __init__(self):
@@ -26,21 +30,25 @@ class Agent:
 
         self.name = rospy.get_namespace()
 
+        # service to get relative positions of other miros
         rospy.wait_for_service('/get_miro_pos')
         self.get_miro_pos = rospy.ServiceProxy('/get_miro_pos', GetMiRoPos)
 
+        # publish velocity to move
         self.pub_vel = rospy.Publisher(
             self.name + 'control/cmd_vel',
             TwistStamped,
             queue_size=0
         )
 
+        # subscribe to our pose
         self.sub_pose = rospy.Subscriber(
             self.name + 'sensors/body_pose',
             Pose2D,
             self.callback_miro_pose
         )
 
+        # subscribe to sonar sensor
         self.sub_sonar = rospy.Subscriber(
             self.name + 'sensors/sonar',
             Range,
@@ -53,14 +61,15 @@ class Agent:
             queue_size=0
         )
 
+        # move head down to not look over walls with sonar
         self.head_lift = np.radians(50)
         self.kin_joints = JointState()
         self.kin_joints.name = ["tilt", "lift", "yaw", "pitch"]
         self.kin_joints.position = [0, self.head_lift, 0, 0]
+
         self.rate = rospy.Rate(self.TICK)
         self.pose = Pose2D()
         self.sonar = 1
-        self.n_reverse = 0
 
         self.state = self.gather
 
@@ -99,14 +108,18 @@ class Agent:
         # Publish message to control/cmd_vel topic
         self.pub_vel.publish(msg_cmd_vel)
 
+    # turn until facing an angle
     def turn_to_angle(self, theta):
         while not rospy.is_shutdown():
-            # print(self.name, ' is turning')
 
+            # get difference between current theta and target theta
             diff = (theta - self.pose.theta) % (2 * np.pi)
+
+            # check if at angle (with some leeway)
             if (np.pi - 0.1 < diff < np.pi + 0.1) or -0.1 < diff < 0.1:
                 return
 
+            # keep turning
             elif diff > np.pi:
                 self.drive(2, -0)
             else:
@@ -114,10 +127,11 @@ class Agent:
 
             self.rate.sleep()
 
+    # move in a straight line for some time 
     def move_for_time(self, t, speed=1):
+        # calculate time to stop moving
         end_time = time.time() + t
         while not rospy.is_shutdown():
-            # print(self.name, ' is moving')
 
             self.drive(speed, speed)
 
@@ -125,6 +139,7 @@ class Agent:
                 return
             self.rate.sleep()
         
+    # get average x y of a list of Vector3s
     def get_average_position(self, relative_positions):
         sum_all = Vector3()
         for pos in relative_positions:
@@ -136,14 +151,14 @@ class Agent:
             0
             )
 
+    # fleeting/ flocking
     def fleet(self):
-        self.n_reverse = 0
-        
-        # diff = np.inf
-        # while diff > 0.2:
+        print(self.name + ' is FLEETING')
+
         relative_positions = self.get_relative_positions()
 
         # alignment
+        # try to align with the angle of other miros in the flock
         align = self.pose.theta
         n = 0
         for pos in relative_positions:
@@ -152,75 +167,55 @@ class Agent:
                 n += 1
         align = align / (n+1)
 
-        # if n + 1 > self.N_MIROS / 2:
-        #     print(self.name + ' has STOPPED')
-        #     return
-        # else:
-        print(self.name + ' is FLEETING')
-
-        # # cohesion
-        # rel_pos = []
-        # for pos in relative_positions:
-        #     if size([pos.x, pos.y]) >= 1:
-        #         rel_pos.append(pos)
-
-        # if len(rel_pos) > 0:
-        #     centre = self.get_average_position(rel_pos)
-        #     to_centre = (np.arctan2(centre.y, centre.x)) % (2 * np.pi)
-        # else:
-        #     to_centre = 0
-
-        # # separation
-        # sep = 0
-        # n = 0
-        # for pos in relative_positions:
-        #     if size([pos.x, pos.y]) < 1:
-        #         to_pos = np.arctan2(pos.y, pos.x)
-        #         sep += to_pos + np.pi
-        #         n += 1
-        # if n > 0:
-        #     sep /= n
-
-        # a = 0.7
-        # b = 0.2
-        # c = 0.1
-        # theta = align * a + to_centre * b + sep * c
-
+        # turn to align angle and move forwards
         self.turn_to_angle(align)
-        # diff = np.abs(pose - self.pose.theta)
         self.move_for_time(5, speed=5)
 
+    # move towards the centre of other miros in vision
     def gather(self):
         print(self.name + ' is GATHERING')
-        self.n_reverse = 0
         relative_positions = self.get_relative_positions()
-        if len(relative_positions) > 0:           
+        if len(relative_positions) > 0:
+            # get centre of other miros
             centre = self.get_average_position(relative_positions)
+            # get angle to move towards that centre
             theta = (np.arctan2(centre.y, centre.x)) % (2 * np.pi)
 
+            # turn to angle and move forwards
             self.turn_to_angle(theta)
             self.move_for_time(5, speed=5)
 
+    # randomly explore in a direction
     def explore(self):
         print(self.name + ' is EXPLORING')
-        self.n_reverse = 0
+        # get a random angle
         theta = np.random.random() * 2 * np.pi
+        # turn to angle and move forwards
         self.turn_to_angle(theta)
         self.move_for_time(5, speed=5)
 
+    # reverse for some time, used to get away from walls
     def reverse(self):
         print(self.name + ' is REVERSING')
-        self.n_reverse += 1
+        # move backwards and turn a bit
         self.move_for_time(2, -1)
-        self.turn_to_angle(self.pose.theta + np.radians(30))
-        self.move_for_time(5, speed=5)
+        # self.turn_to_angle(self.pose.theta + np.radians(30))
+        # self.move_for_time(5, speed=5)
 
+    # main loop
     def loop(self):
         while not rospy.is_shutdown():
+            # set head lift
             self.pub_kin.publish(self.kin_joints)
 
+            # get other miros in vision
             relative_positions = self.get_relative_positions(debug=True)
 
+            # choose a state
+            #   if next to wall then reverse
+            #   if cant see anyone then explore
+            #   if other miro within 1m then fleet
+            #   else gather (there must be a miro within vision but not within 1m)
             self.state = self.gather
             if self.sonar < 0.1:
                 self.state = self.reverse
@@ -232,76 +227,8 @@ class Agent:
                         self.state = self.fleet
                         break
 
+            # carry out state
             self.state()
-
-            # if self.state == 'turn':
-            #     if len(relative_positions) > 0:                    
-            #         sum_all = Vector3()
-            #         for pos in relative_positions:
-            #             sum_all.x += pos.x
-            #             sum_all.y += pos.y
-            #         centre = Vector3(
-            #             sum_all.x / len(relative_positions),
-            #             sum_all.y / len(relative_positions),
-            #             0
-            #         )
-            #         theta = (np.arctan2(centre.y, centre.x) - self.pose.theta) % (2 * np.pi)
-                    
-            #         if (np.pi - 0.1 < theta < np.pi + 0.1) or -0.1 < theta < 0.1:
-            #             self.state = 'move'
-            #             self.timer = time.time()
-            #             self.move_time = 5
-  
-            #         elif theta > np.pi:
-            #             self.drive(2, -0)
-            #         else:
-            #             self.drive(-0, 2)
-
-            #     else:
-            #         # explore
-            #         theta = np.random.random() * 2 * np.pi
-            #         self.turn_to_angle(theta)
-            #         self.state = 'move'
-            #         self.timer = time.time()
-            #         self.move_time = 5
-
-            # elif self.state == 'move':
-            #     self.drive(3, 3)
-            #     if time.time() - self.timer > self.move_time:
-            #         self.state = 'turn'
-
-            # elif self.state == 'fleet':
-            #     print(self.name, 'im fleeting :)')
-            #     pose = 0
-            #     n = 0
-            #     for pos in relative_positions:
-            #         if size([pos.x, pos.y]) < 1:
-            #             pose += pos.z
-            #             n += 1
-            #     pose = pose / n
-
-            #     self.turn_to_angle(pose)
-            #     self.state = 'move'
-            #     self.timer = time.time()
-            #     self.move_time = 5
-
-
-            # diff = np.arccos(np.dot(centre, pose) / np.abs(size(centre) * size(pose)))
-
-            # print(diff)
-            # if diff > np.pi:
-            #     self.drive(0, 1)
-            # else:
-            #     self.drive(1, 0)
-            
-
-            # msg_cmd_vel = TwistStamped()
-            # dtheta = np.arctan2(centre.y, centre.x) - self.pose.theta
-            # print(self.name, dtheta)
-            # dr = 3
-            # msg_cmd_vel.twist.linear.x = dr
-            # msg_cmd_vel.twist.angular.z = dtheta
-            # self.pub_vel.publish(msg_cmd_vel)
 
             self.rate.sleep()
 

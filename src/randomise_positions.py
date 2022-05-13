@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# not used in the final implementation of tests
+
 import rospy
 import random
 import numpy as np

@@ -26,8 +26,10 @@ else:
 def distance(pos1, pos2):
     return np.sqrt((pos1.x - pos2.x) ** 2 + (pos1.y - pos2.y) ** 2)
 
+# get the determinant of a 2x2 matrix
 def det(mat):
     return mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0]
+
 
 class GetMiRoPosService:
     data = None
@@ -47,11 +49,6 @@ class GetMiRoPosService:
             self.callback_model_states
         )
 
-        # self.sub_link_states = rospy.Subscriber(
-        #     'gazebo/link_states',
-        #     LinkStates,
-        #     self.callback_link_states
-        # )
         self.model_states = {}
         
         self.walls = [
