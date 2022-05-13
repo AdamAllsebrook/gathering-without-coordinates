@@ -1,3 +1,4 @@
+# plot data about a run
 from matplotlib import pyplot as plt
 from joblib import load
 import os

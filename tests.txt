@@ -5,11 +5,11 @@
 10 roslaunch gathering_without_coordinates test.launch open:=true random:=true pos1:="-x -0.8 -y -2 -Y 2.2" pos2:="-x 2 -y -2 -Y 0.8" pos3:="-x -2 -y 2 -Y 1.9"
 11 roslaunch gathering_without_coordinates test.launch open:=true random:=true pos1:="-x 2 -y 2 -Y 4.3" pos2:="-x -2 -y 2 -Y 3.2" pos3:="-x 2 -y -2 -Y 2.1"
 
-roslaunch gathering_without_coordinates test.launch open:=true gather:=true pos1:="-x 1 -y 0 -Y 0.4" pos2:="-x -0.5 -y 1.75 -Y 1.6" pos3:="-x -0.5 -y 0 -Y 5.1"
-roslaunch gathering_without_coordinates test.launch open:=true gather:=true pos1:="-x -0.5 -y 1.75 -Y 3.6" pos2:="-x -0.5 -y -1.75 -Y 4.9" pos3:="-x 2 -y 0 -Y 2.4"
-roslaunch gathering_without_coordinates test.launch open:=true gather:=true pos1:="-x -2 -y 2 -Y 2.7" pos2:="-x -2 -y -1 -Y 1.2" pos3:="-x 1 -y -0.8 -Y 3.1"
-roslaunch gathering_without_coordinates test.launch open:=true gather:=true pos1:="-x -0.8 -y -2 -Y 2.2" pos2:="-x 2 -y -2 -Y 0.8" pos3:="-x -2 -y 2 -Y 1.9"
-roslaunch gathering_without_coordinates test.launch open:=true gather:=true pos1:="-x 2 -y 2 -Y 4.3" pos2:="-x -2 -y 2 -Y 3.2" pos3:="-x 2 -y -2 -Y 2.1"
+12 roslaunch gathering_without_coordinates test.launch open:=true gather:=true pos1:="-x 1 -y 0 -Y 0.4" pos2:="-x -0.5 -y 1.75 -Y 1.6" pos3:="-x -0.5 -y 0 -Y 5.1"
+13 roslaunch gathering_without_coordinates test.launch open:=true gather:=true pos1:="-x -0.5 -y 1.75 -Y 3.6" pos2:="-x -0.5 -y -1.75 -Y 4.9" pos3:="-x 2 -y 0 -Y 2.4"
+14 roslaunch gathering_without_coordinates test.launch open:=true gather:=true pos1:="-x -2 -y 2 -Y 2.7" pos2:="-x -2 -y -1 -Y 1.2" pos3:="-x 1 -y -0.8 -Y 3.1"
+15 roslaunch gathering_without_coordinates test.launch open:=true gather:=true pos1:="-x -0.8 -y -2 -Y 2.2" pos2:="-x 2 -y -2 -Y 0.8" pos3:="-x -2 -y 2 -Y 1.9"
+16 roslaunch gathering_without_coordinates test.launch open:=true gather:=true pos1:="-x 2 -y 2 -Y 4.3" pos2:="-x -2 -y 2 -Y 3.2" pos3:="-x 2 -y -2 -Y 2.1"
 
 roslaunch gathering_without_coordinates test.launch closed:=true random:=true pos1:="-x 1 -y 0 -Y 0.4" pos2:="-x -0.5 -y 1.75 -Y 1.6" pos3:="-x -0.5 -y 0 -Y 5.1"
 roslaunch gathering_without_coordinates test.launch closed:=true random:=true pos1:="-x -0.5 -y 1.75 -Y 3.6" pos2:="-x -0.5 -y -1.75 -Y 4.9" pos3:="-x 2 -y 0 -Y 2.4"

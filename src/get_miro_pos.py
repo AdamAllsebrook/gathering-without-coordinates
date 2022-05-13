@@ -37,20 +37,24 @@ class GetMiRoPosService:
     def __init__(self):
         rospy.init_node('get_miro_pos_server')
 
+        # init server
         self.server = rospy.Service(
             'get_miro_pos',
             GetMiRoPos,
             self.callback_get_miro_pos
         )
 
+        # get state of all models - used to get miro positions
         self.sub_model_states = rospy.Subscriber(
             'gazebo/model_states',
             ModelStates,
             self.callback_model_states
         )
 
+        # store miro positions when we see them
         self.model_states = {}
         
+        # hardcoded position and orientation of all walls in the maze - all are the same length
         self.walls = [
             (0.344130, 1.836410, 0, 1),
             (1.844120, 1.296410, 1, 0),
@@ -63,14 +67,18 @@ class GetMiRoPosService:
         ]
         self.wall_length = 1.05
 
+        # load data file to store results
         if os.path.exists(RESULTS_PATH):
             self.data = load(RESULTS_PATH)
         else:
             self.data = []
         self.data.append(np.empty((0, 2)))
 
+        # get start time 
         self.start = rospy.get_rostime()
 
+    # test if vision is blocked by a wall
+    # uses Cramers rule to work out intersection using matrix dets
     def vision_blocked(self, x, y, dx, dy):
         """
         [w_x] + a * [w_dx] = [x] + b * [dx]
@@ -112,11 +120,12 @@ class GetMiRoPosService:
             # intersect = (
             #     w_x + a * w_dx,
             #     w_y + a * w_dy,
-            #
+            #       or
             #     x + b * dx,
             #     y + b * dy
             # )
 
+            # intersection assumes both lines are infinitely long, we can use size of a to only check with the wall length
             if -self.wall_length / 2 < a < self.wall_length / 2:
                 return True
         return False
@@ -126,12 +135,12 @@ class GetMiRoPosService:
     def callback_get_miro_pos(self, req):
         relative_positions = []
         res = GetMiRoPosResponse()
-        # get position of requesting miro
         if req.name not in self.model_states:
             return res
+        # get position of requesting miro
         req_pos = self.model_states[req.name]
 
-        # get relative positions of other miros within range
+        # get relative positions of other miros within range, that are not blocked by walls
         for name, position in self.model_states.items():
             if name != req.name and distance(req_pos, position) < req.range and not (WALLS  and self.vision_blocked(
                 req_pos.x, req_pos.y, position.x - req_pos.x, position.y - req_pos.y
@@ -148,9 +157,12 @@ class GetMiRoPosService:
 
     # get the current position of all miros
     def callback_model_states(self, msg):
+        # stop running after 3 minutes (length of test)
         if rospy.get_rostime().to_sec() > 180:
             print('\n\n\n3 minutes are up! Data index is %d\n\n\n' % (len(self.data) - 1))
             rospy.signal_shutdown('')
+
+        # update the position of all miros
         self.model_states = {}
         for i, model_name in enumerate(msg.name):
             if 'miro' in model_name:
@@ -161,10 +173,15 @@ class GetMiRoPosService:
                     msg.pose[i].position.y,
                     euler[2]
                 )
+        # store the average distance at this point in time
         self.save_average_distance()
 
+    # store the average distance between all miros
     def save_average_distance(self):
+        # check if everything is loaded
         if self.data is None or len(self.model_states) < 3: return
+
+        # if there is not data yet, or 0.1 seconds have passed since the last data point
         if self.data[-1].shape[0] == 0 or self.data[-1][-1][0] + 0.1 < rospy.get_rostime().to_sec():
             total = 0
             n = 0
@@ -179,21 +196,10 @@ class GetMiRoPosService:
                 time = rospy.get_rostime() - self.start
                 time = time.to_sec()
 
+                # store time and average distance
                 self.data[-1] = np.append(self.data[-1], np.array([[time, dist]]), axis=0)
-                # print(time, dist)
 
-        # all_pos = np.array([self.model_states[name] for name in self.model_states])
-
-        # average = 
-                
-    # 1.05
-    # get the current position of all miros
-    # def callback_link_states(self, msg):
-    #     for i, link_name in enumerate(msg.name):
-    #         if 'inside_walls' in link_name:
-    #             print(link_name, msg.pose[i])
-
-
+    # save the data to a file
     def save(self):
         dump(self.data, dir_path + '/results.gz')
 

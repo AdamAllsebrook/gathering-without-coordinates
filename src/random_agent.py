@@ -3,6 +3,7 @@
 from agent import Agent
 import rospy
 
+# agent that only ever explores
 class Random(Agent):
     def loop(self):
         while not rospy.is_shutdown():
