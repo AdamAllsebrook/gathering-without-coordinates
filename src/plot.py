@@ -9,6 +9,8 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 data = load(dir_path + '/results.gz')
 
+print(len(data))
+
 plt.figure(figsize=(12, 8))
 
 time = data[index][:,0]

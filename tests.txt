@@ -7,7 +7,7 @@ open
 closed
     - random 
     - agent
-
+        3: 16
 
 
 1
@@ -40,4 +40,16 @@ roslaunch gathering_without_coordinates miros.launch walls:=true pos1:="-x -2 -y
 -x -0.2 -y -0.9 -Y 0.7967735
 roslaunch gathering_without_coordinates miros.launch walls:=true pos1:="-x -1 -y 1.6576 -Y 4.6788" pos2:="-x 1.32674 -y 2.37 -Y 2.890" pos3:="-x -0.2 -y -0.9 -Y 0.7967735"
 
-Change walls to walls:=false for open area
+
+-------
+
+Change walls to walls:=false for open area!
+
+
+roslaunch gathering_without_coordinates open_area.launch
+roslaunch gathering_without_coordinates closed_area.launch
+
+RANDOM:
+roslaunch gathering_without_coordinates explore_miros.launch walls:=true pos1:=...
+FULL CODE:
+roslaunch gathering_without_coordinates miros.launch walls:=true pos1:=...
