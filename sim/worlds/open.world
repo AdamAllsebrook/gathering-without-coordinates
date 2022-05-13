@@ -82,9 +82,14 @@
 			<pose>0.5 0.2 0.05 0 0 0.5</pose>
 		</include> -->
 
-
 		<include>
 			<uri>model://ground_plane</uri>
+		</include>
+
+		<include>
+			<name>wall1</name>
+			<uri>model://arena_walls</uri>
+			<pose>0 0 0 0 0 0</pose>
 		</include>
 
 		<gravity>0 0 -9.8</gravity>

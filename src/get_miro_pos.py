@@ -4,6 +4,7 @@ import rospy
 import numpy as np
 from joblib import dump, load
 import os
+import sys
 
 from gazebo_msgs.msg import ModelStates, LinkStates
 from geometry_msgs.msg import Vector3
@@ -15,6 +16,11 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 RESULTS_PATH = dir_path + '/results.gz'
 
+if sys.argv[1] == 'true':
+    WALLS = True
+else:
+    WALLS = False
+
 
 # get the 2D distance between two Vector3
 def distance(pos1, pos2):
@@ -24,6 +30,7 @@ def det(mat):
     return mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0]
 
 class GetMiRoPosService:
+    data = None
 
     def __init__(self):
         rospy.init_node('get_miro_pos_server')
@@ -129,9 +136,9 @@ class GetMiRoPosService:
 
         # get relative positions of other miros within range
         for name, position in self.model_states.items():
-            if name != req.name and distance(req_pos, position) < req.range and not self.vision_blocked(
+            if name != req.name and distance(req_pos, position) < req.range and not (WALLS  and self.vision_blocked(
                 req_pos.x, req_pos.y, position.x - req_pos.x, position.y - req_pos.y
-            ):
+            )):
                 relative_positions.append(Vector3(
                     position.x - req_pos.x,
                     position.y - req_pos.y,
@@ -144,6 +151,8 @@ class GetMiRoPosService:
 
     # get the current position of all miros
     def callback_model_states(self, msg):
+        if rospy.get_rostime().to_sec() > 180:
+            rospy.signal_shutdown('3 MINUTES ARE UP!!!')
         self.model_states = {}
         for i, model_name in enumerate(msg.name):
             if 'miro' in model_name:
@@ -157,6 +166,7 @@ class GetMiRoPosService:
         self.save_average_distance()
 
     def save_average_distance(self):
+        if self.data is None or len(self.model_states) < 3: return
         if self.data[-1].shape[0] == 0 or self.data[-1][-1][0] + 0.1 < rospy.get_rostime().to_sec():
             total = 0
             n = 0
