@@ -4,11 +4,13 @@ open
     - random 
         3: 18
     - agent
+        3: 20
 
 closed
     - random 
+        3: 19
     - agent
-        3: 16
+        3: 22
 
 
 1
