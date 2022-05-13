@@ -67,5 +67,5 @@
             -Y 0" />
         <node name="random_agent" pkg="gathering_without_coordinates" type="random_agent.py" output="screen"></node>
     </group> -->
-    <node name="randomise_positions" pkg="gathering_without_coordinates" type="randomise_positions.py" output="screen"></node>
+    <!-- <node name="randomise_positions" pkg="gathering_without_coordinates" type="randomise_positions.py" output="screen"></node> -->
 </launch>
