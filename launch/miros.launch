@@ -8,7 +8,6 @@
 
     <!-- Set the name for Gazebo -->
     <arg name="gazebo_ns" default="gazebo" doc="Gazebo namespace, typically 'gazebo' or 'gazebo_server'" />
-    <node name="get_miro_pos" pkg="gathering_without_coordinates" type="get_miro_pos.py" output="screen" args="$(arg walls)"></node>
 
     <group ns="miro1">
         <!-- <param name="~pos" command="$(find gathering_without_coordinates)/src/generate_random_position.py" default="-x 0 -y 0"/> -->

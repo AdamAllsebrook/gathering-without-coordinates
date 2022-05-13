@@ -1,18 +1,21 @@
 
 <launch>
+
+    <arg name="pos1" default="-x 0 -y 0 -Y 3.14"/>
+    <arg name="pos2" default="-x -1 -y 0 -Y 0"/>
+    <arg name="pos3" default="-x -1 -y 2 -Y 0"/>
+
     <!-- Set the name for Gazebo -->
     <arg name="gazebo_ns" default="gazebo" doc="Gazebo namespace, typically 'gazebo' or 'gazebo_server'" />
-    <node name="get_miro_pos" pkg="gathering_without_coordinates" type="get_miro_pos.py" output="screen"></node>
+
     <group ns="miro1">
         <!-- <param name="~pos" command="$(find gathering_without_coordinates)/src/generate_random_position.py" default="-x 0 -y 0"/> -->
         <node name="spawn_miro" pkg="gazebo_ros" type="spawn_model" ns="miro1"
             args="-sdf -model miro1
             -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf
             -gazebo_namespace /$(arg gazebo_ns) 
-            -x 0
-            -y 0
             -z 0 
-            -Y 3.14" />
+            $(arg pos1)" />
         <node name="random_agent" pkg="gathering_without_coordinates" type="random_agent.py" output="screen"></node>
     </group>
 
@@ -22,10 +25,8 @@
             args="-sdf -model miro2
             -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf 
             -gazebo_namespace /$(arg gazebo_ns) 
-            -x -1
-            -y 0
             -z 0 
-            -Y 0" />
+            $(arg pos2)" />
         <node name="random_agent" pkg="gathering_without_coordinates" type="random_agent.py" output="screen"></node>
     </group>
 
@@ -35,10 +36,8 @@
             args="-sdf -model miro3
             -file $(optenv MIRO_DIR_MDK)/sim/models/miro_model/miro_model.sdf 
             -gazebo_namespace /$(arg gazebo_ns) 
-            -x -1
-            -y 2
-            -z 0 
-            -Y 0" />
+            -z 0
+            $(arg pos3)" />
         <node name="random_agent" pkg="gathering_without_coordinates" type="random_agent.py" output="screen"></node>
     </group>
     
@@ -52,7 +51,7 @@
             -y 2
             -z 0 
             -Y 0" />
-        <node name="random_agent" pkg="gathering_without_coordinates" type="random_agent.py" output="screen"></node>
+        <node name="agent" pkg="gathering_without_coordinates" type="agent.py" output="screen"></node>
     </group>
     
 
@@ -65,7 +64,7 @@
             -y 2
             -z 0 
             -Y 0" />
-        <node name="random_agent" pkg="gathering_without_coordinates" type="random_agent.py" output="screen"></node>
+        <node name="agent" pkg="gathering_without_coordinates" type="agent.py" output="screen"></node>
     </group> -->
     <!-- <node name="randomise_positions" pkg="gathering_without_coordinates" type="randomise_positions.py" output="screen"></node> -->
 </launch>

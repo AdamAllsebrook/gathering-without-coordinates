@@ -1,0 +1,36 @@
+<launch>
+
+
+    <arg name="pos1" default="-x 0 -y 0 -Y 3.14"/>
+    <arg name="pos2" default="-x -1 -y 0 -Y 0"/>
+    <arg name="pos3" default="-x -1 -y 2 -Y 0"/>
+    <arg name="closed" default="false"/>
+    <arg name="open" default="false"/>
+    <arg name="random" default="false"/>
+    <arg name="gather" default="false"/>
+
+    <group if="$(arg closed)">
+        <include file="$(find gathering_without_coordinates)/launch/closed_area.launch"/>
+    </group>
+    <group if="$(arg open)">
+        <include file="$(find gathering_without_coordinates)/launch/open_area.launch"/>
+    </group>
+
+    
+    <node name="get_miro_pos" pkg="gathering_without_coordinates" type="get_miro_pos.py" output="screen" args="$(arg closed)"></node>
+    <group if="$(arg random)">
+        <include file="$(find gathering_without_coordinates)/launch/explore_miros.launch">
+            <arg name="pos1" value="$(arg pos1)"/>
+            <arg name="pos2" value="$(arg pos2)"/>
+            <arg name="pos3" value="$(arg pos3)"/>
+        </include>
+    </group>
+    <group if="$(arg gather)">
+        <include file="$(find gathering_without_coordinates)/launch/miros.launch">
+            <arg name="pos1" value="$(arg pos1)"/>
+            <arg name="pos2" value="$(arg pos2)"/>
+            <arg name="pos3" value="$(arg pos3)"/>
+        </include>
+    </group>
+
+</launch>

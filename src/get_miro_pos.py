@@ -152,7 +152,8 @@ class GetMiRoPosService:
     # get the current position of all miros
     def callback_model_states(self, msg):
         if rospy.get_rostime().to_sec() > 180:
-            rospy.signal_shutdown('3 MINUTES ARE UP!!!')
+            print('\n\n\n3 minutes are up! Data index is %d\n\n\n' % (len(self.data) - 1))
+            rospy.signal_shutdown('')
         self.model_states = {}
         for i, model_name in enumerate(msg.name):
             if 'miro' in model_name:
