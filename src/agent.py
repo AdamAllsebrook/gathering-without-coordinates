@@ -7,6 +7,7 @@ import time
 from geometry_msgs.msg import TwistStamped, Vector3, Pose2D
 from sensor_msgs.msg import Range
 from miro2.lib import wheel_speed2cmd_vel
+from sensor_msgs.msg import JointState
 
 from gathering_without_coordinates.srv import GetMiRoPos
 
@@ -45,7 +46,17 @@ class Agent:
             Range,
             self.callback_miro_sonar
         )
+        # publish kinematics (head movement)
+        self.pub_kin = rospy.Publisher(
+            self.name + 'control/kinematic_joints',
+            JointState,
+            queue_size=0
+        )
 
+        self.head_lift = np.radians(50)
+        self.kin_joints = JointState()
+        self.kin_joints.name = ["tilt", "lift", "yaw", "pitch"]
+        self.kin_joints.position = [0, self.head_lift, 0, 0]
         self.rate = rospy.Rate(self.TICK)
         self.pose = Pose2D()
         self.sonar = 1
@@ -206,6 +217,8 @@ class Agent:
 
     def loop(self):
         while not rospy.is_shutdown():
+            self.pub_kin.publish(self.kin_joints)
+
             relative_positions = self.get_relative_positions(debug=True)
 
             self.state = self.gather
